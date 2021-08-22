@@ -8,3 +8,6 @@ Go to your ../steam/steamapps/common/YookaLaylee/YookaLaylee64_Data/Managed dire
 - Open the DebugMenu with NUMPAD_0 or F10
 - Click on the options you want to activate (Cursor get's enabled in this state)
 - In the auto generated file ../steam/steamapps/common/YookaLaylee/xNyuDebug/key_settings.txt you can manually set the hotkeys and additional parameters. After edited this file, go back ingame and click the "Reload Hotkey Settings" option
+
+# Create your own Assembly
+Download DnSpy https://github.com/dnSpy/dnSpy and add the class inside of mod.cs in the original Assembly-CSharp.dll. You will need to change the StartUp class aswell and create a new GameObject of the xNyuDebug class. After this you can save the module and install it.
