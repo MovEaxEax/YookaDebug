@@ -50,8 +50,8 @@ It's possible that you want the mod in another version than 1.1.0, so consider t
   EmoteTaunt()
   EmoteDisappointed()
   EmoteAngry()
-  Walk(float x, float y, float z) //This is a Vector3 parameter, so you need to pass 3 float values here
-  Camera(float x, float y, float z) //This is a Vector3 parameter, so you need to pass 3 float values here
+  Walk(float x, float y, float z)  //This is a Vector3 parameter, so you need to pass 3 float values here
+  Camera(float x, float y, float z)  //This is a Vector3 parameter, so you need to pass 3 float values here
   ```
   
   In the source code, there are Inputcontrollers, which can be triggered by manipulating their booleans. The list above, represents each Inputcontroller existing,
@@ -61,11 +61,14 @@ It's possible that you want the mod in another version than 1.1.0, so consider t
   ```
   //Set camera and press jump in frame 1
   frame{Jump();Camera(100,258,0)}
+  
   //Hold jump for 2 more frames pressed
   frame{Jump()}
   frame{Jump()}
+  
   //Wait for exact 30 frames
   wait{30}
+  
   //Hold Crouch for the last 1 frame
   frame{Crouch()}
   ```
