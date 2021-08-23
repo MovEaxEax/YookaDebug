@@ -2,9 +2,23 @@ using System;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 public class xNyuDebug : MonoBehaviour
 {
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool AllocConsole();
+
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool FreeConsole();
+
+    [DllImport("msvcrt.dll")]
+    public static extern int system(string cmd);
+
+	[DllImport("User32.dll")]
+	public static extern short GetAsyncKeyState(int vKeys);
+
 	public void OnGUI(){
 
 		//Debug Menu is open
@@ -25,7 +39,7 @@ public class xNyuDebug : MonoBehaviour
 
 			if(!DebugMenuHotkey){
 				//Display Title
-				GUI.Label(new Rect(1420 * scr_scale_w, 200 * scr_scale_h, 1500 * scr_scale_w, 800 * scr_scale_h), "Yooka Debugger v1.0", StyleTitle);
+				GUI.Label(new Rect(1420 * scr_scale_w, 200 * scr_scale_h, 1500 * scr_scale_w, 800 * scr_scale_h), "Yooka Debugger v1.1", StyleTitle);
 				GUI.Label(new Rect(1520 * scr_scale_w, 340 * scr_scale_h, 1500 * scr_scale_w, 800 * scr_scale_h), "Display values, call methods and more!", StyleAbout);
 				GUI.Label(new Rect(1500 * scr_scale_w, 390 * scr_scale_h, 1500 * scr_scale_w, 800 * scr_scale_h), "Click on the Options you want to activate", StyleAbout);
 				GUI.Label(new Rect(3340 * scr_scale_w, 2080 * scr_scale_h, 2000 * scr_scale_w, 800 * scr_scale_h), "Developed by xNyu", StyleAbout);
@@ -61,7 +75,7 @@ public class xNyuDebug : MonoBehaviour
 				GUI.Label(new Rect(2680 * scr_scale_w, 800 * scr_scale_h + ((50 * 15) * scr_scale_h), 960 * scr_scale_w, 40 * scr_scale_h), "F6:    " + OptionHotkeyToggles[14], (OptionHotkeysActivated ? StyleNormalPurple : StyleNormalGray));
 				GUI.Label(new Rect(2680 * scr_scale_w, 800 * scr_scale_h + ((50 * 16) * scr_scale_h), 960 * scr_scale_w, 40 * scr_scale_h), "F7:    " + OptionHotkeyToggles[15], (OptionHotkeysActivated ? StyleNormalPurple : StyleNormalGray));
 				GUI.Label(new Rect(2680 * scr_scale_w, 800 * scr_scale_h + ((50 * 17) * scr_scale_h), 960 * scr_scale_w, 40 * scr_scale_h), "F8:    " + OptionHotkeyToggles[16], (OptionHotkeysActivated ? StyleNormalPurple : StyleNormalGray));
-				GUI.Label(new Rect(2680 * scr_scale_w, 800 * scr_scale_h + ((50 * 19) * scr_scale_h), 960 * scr_scale_w, 40 * scr_scale_h), "Reload Hotkeysettings from file" + OptionHotkeyToggles[16], (OptionHotkeysActivated ? StyleNormalPurple : StyleNormalGray));
+				GUI.Label(new Rect(2680 * scr_scale_w, 800 * scr_scale_h + ((50 * 19) * scr_scale_h), 960 * scr_scale_w, 40 * scr_scale_h), "Reload Hotkeysettings from file", (OptionHotkeysActivated ? StyleNormalPurple : StyleNormalGray));
 			}else{
 				//Hotkey Menu
 				int d_row = 0;
@@ -86,7 +100,7 @@ public class xNyuDebug : MonoBehaviour
 				}
 				d_row++;if(d_row == 4){d_line++;d_row = 0;}
 
-				d_commands = Funcs_Blank4;
+				d_commands = Funcs_TAS;
 				for(int i = 0; i < d_commands.Count; i++){
 					GUI.Label(new Rect((300 + (d_row * 800)) * scr_scale_w, (100 + (d_line * 1080)) * scr_scale_h + ((40 * i) * scr_scale_h), 500 * scr_scale_w, 30 * scr_scale_h), d_commands[i], StyleSmallYellow);
 				}
@@ -217,23 +231,23 @@ public class xNyuDebug : MonoBehaviour
 
 					//Click Options Details
 					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h && mouse_y < 800 * scr_scale_h + ((50 * 1) * scr_scale_h)) {OptionHotkeysActivated = !OptionHotkeysActivated;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 1) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 2) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 0; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 2) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 3) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 1; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 3) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 4) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 2; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 4) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 5) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 3; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 5) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 6) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 4; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 6) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 7) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 5; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 7) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 8) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 6; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 8) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 9) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 7; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 9) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 10) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 8; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 10) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 11) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 9; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 11) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 12) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 10; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 12) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 13) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 11; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 13) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 14) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 12; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 14) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 15) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 13; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 15) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 16) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 14; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 16) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 17) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 15; DebugMenuHotkey = true;}
-					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 17) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 18) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 16; DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 1) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 2) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 0; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 2) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 3) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 1; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 3) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 4) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 2; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 4) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 5) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 3; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 5) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 6) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 4; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 6) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 7) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 5; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 7) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 8) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 6; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 8) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 9) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 7; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 9) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 10) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 8; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 10) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 11) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 9; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 11) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 12) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 10; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 12) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 13) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 11; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 13) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 14) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 12; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 14) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 15) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 13; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 15) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 16) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 14; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 16) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 17) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 15; LoadTASScripts(); DebugMenuHotkey = true;}
+					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 17) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 18) * scr_scale_h) && OptionHotkeysActivated) {OptionHotkeySlot = 16; LoadTASScripts(); DebugMenuHotkey = true;}
 					if(mouse_x > 2680 * scr_scale_w && mouse_x < ((2680 * scr_scale_w) + 800 * scr_scale_w) && mouse_y > 800 * scr_scale_h + ((50 * 19) * scr_scale_h) && mouse_y < 800 * scr_scale_h + ((50 * 20) * scr_scale_h) && OptionHotkeysActivated) {
 						//Reload Keysettings
 						string[] key_settings_lines = File.ReadAllLines(settings_file);
@@ -265,7 +279,7 @@ public class xNyuDebug : MonoBehaviour
 					}
 					d_row++;if(d_row == 4){d_line++;d_row = 0;}
 
-					d_commands = Funcs_Blank4;
+					d_commands = Funcs_TAS;
 					for(int i = 0; i < d_commands.Count; i++){
 						if(i > 0 && mouse_x > (300 + (d_row * 800)) * scr_scale_w && mouse_x < (300 + ((d_row+1) * 800)) * scr_scale_w && mouse_y > (100 + (d_line * 1080)) * scr_scale_h + ((40 * i) * scr_scale_h) && mouse_y < (100 + (d_line * 1080)) * scr_scale_h + ((40 * (i+1)) * scr_scale_h)){OptionHotkeyToggles[OptionHotkeySlot] = d_commands[i]; DebugMenuHotkey = false;}
 					}
@@ -337,131 +351,138 @@ public class xNyuDebug : MonoBehaviour
 
 			if(skip_1_frame == 0){
 				//Clear List
-				if(OptionDetailsData.Count > 0) OptionDetailsData.Clear();
+				if(OptionDetailsActivated){
+					if(OptionDetailsData.Count > 0) OptionDetailsData.Clear();
 
-				//Find Objects
-				PlayerLogic player = GameObject.FindObjectOfType<PlayerLogic>();
-				PlayerGravitySets player_gravity = player.GravitySets;
+					//Find Objects
+					PlayerLogic player = GameObject.FindObjectOfType<PlayerLogic>();
+					PlayerGravitySets player_gravity = player.GravitySets;
 
-				GameCamera camera = FindObjectOfType<CameraManager>().CurrentPlayerCamera;
+					FollowCamera camera = (FollowCamera)FindObjectOfType<CameraManager>().GetPlayerCamera(PlayerCameraTypes.Follow);
 
 
-				if(OptionDetailsToggles[0]){
-					//Player Coordinates
-					try{OptionDetailsData.Add("-Player Position-");}catch{}
-					try{OptionDetailsData.Add("Position: " + player.transform.position.ToString());}catch{}
-					try{OptionDetailsData.Add("Rotation: " + player.transform.eulerAngles.ToString());}catch{}
-					try{OptionDetailsData.Add("Forward: " + player.transform.forward.ToString());}catch{}
-				}
+					if(OptionDetailsToggles[0]){
+						//Player Coordinates
+						try{OptionDetailsData.Add("-Player Position-");}catch{}
+						try{OptionDetailsData.Add("Position: " + player.transform.position.ToString());}catch{}
+						try{OptionDetailsData.Add("Rotation: " + player.transform.eulerAngles.ToString());}catch{}
+						try{OptionDetailsData.Add("Forward: " + player.transform.forward.ToString());}catch{}
+					}
 
-				if(OptionDetailsToggles[1]){
-					//Player Physics
-					try{OptionDetailsData.Add("-Player Gravity-");}catch{}
-					try{OptionDetailsData.Add("GravityDefault Factor: " + player_gravity.GravityDefault.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityDefault DragYUp: " + player_gravity.GravityDefault.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityDefault DragYDown:" + player_gravity.GravityDefault.DragYDownwards.ToString());}catch{}
+					if(OptionDetailsToggles[1]){
+						//Player Physics
+						try{OptionDetailsData.Add("-Player Gravity-");}catch{}
+						try{OptionDetailsData.Add("GravityDefault Factor: " + player_gravity.GravityDefault.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityDefault DragYUp: " + player_gravity.GravityDefault.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityDefault DragYDown:" + player_gravity.GravityDefault.DragYDownwards.ToString());}catch{}
 					
-					try{OptionDetailsData.Add("GravityDynamic Factor: " + player_gravity.GravityDynamic.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityDynamic DragYUp: " + player_gravity.GravityDynamic.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityDynamic DragYDown:" + player_gravity.GravityDynamic.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityDynamic Factor: " + player_gravity.GravityDynamic.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityDynamic DragYUp: " + player_gravity.GravityDynamic.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityDynamic DragYDown:" + player_gravity.GravityDynamic.DragYDownwards.ToString());}catch{}
 					
-					try{OptionDetailsData.Add("GravityFartBubble Factor: " + player_gravity.GravityFartBubble.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFartBubble DragYUp: " + player_gravity.GravityFartBubble.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFartBubble DragYDown:" + player_gravity.GravityFartBubble.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFartBubble Factor: " + player_gravity.GravityFartBubble.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFartBubble DragYUp: " + player_gravity.GravityFartBubble.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFartBubble DragYDown:" + player_gravity.GravityFartBubble.DragYDownwards.ToString());}catch{}
 					
-					try{OptionDetailsData.Add("GravityFluidQuicks Factor: " + player_gravity.GravityFluidQuicksandSurface.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFluidQuicks DragYUp: " + player_gravity.GravityFluidQuicksandSurface.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFluidQuicks DragYDown:" + player_gravity.GravityFluidQuicksandSurface.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFluidQuicks Factor: " + player_gravity.GravityFluidQuicksandSurface.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFluidQuicks DragYUp: " + player_gravity.GravityFluidQuicksandSurface.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFluidQuicks DragYDown:" + player_gravity.GravityFluidQuicksandSurface.DragYDownwards.ToString());}catch{}
 					
-					try{OptionDetailsData.Add("GravityFly Factor: " + player_gravity.GravityFly.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFly DragYUp: " + player_gravity.GravityFly.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityFly DragYDown:" + player_gravity.GravityFly.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFly Factor: " + player_gravity.GravityFly.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFly DragYUp: " + player_gravity.GravityFly.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityFly DragYDown:" + player_gravity.GravityFly.DragYDownwards.ToString());}catch{}
 
-					try{OptionDetailsData.Add("GravityWaterSurface Factor: " + player_gravity.GravityWaterSurface.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityWaterSurface DragYUp: " + player_gravity.GravityWaterSurface.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityWaterSurface DragYDown:" + player_gravity.GravityWaterSurface.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityWaterSurface Factor: " + player_gravity.GravityWaterSurface.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityWaterSurface DragYUp: " + player_gravity.GravityWaterSurface.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityWaterSurface DragYDown:" + player_gravity.GravityWaterSurface.DragYDownwards.ToString());}catch{}
 
-					try{OptionDetailsData.Add("GravityUnderwater Factor: " + player_gravity.GravityWaterSwimUnderwater.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityUnderwater DragYUp: " + player_gravity.GravityWaterSwimUnderwater.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityUnderwater DragYDown:" + player_gravity.GravityWaterSwimUnderwater.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwater Factor: " + player_gravity.GravityWaterSwimUnderwater.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwater DragYUp: " + player_gravity.GravityWaterSwimUnderwater.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwater DragYDown:" + player_gravity.GravityWaterSwimUnderwater.DragYDownwards.ToString());}catch{}
 
-					try{OptionDetailsData.Add("GravityUnderwaterV2 Factor: " + player_gravity.GravityWaterSwimUnderwaterV2.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityUnderwaterV2 DragYUp: " + player_gravity.GravityWaterSwimUnderwaterV2.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityUnderwaterV2 DragYDown:" + player_gravity.GravityWaterSwimUnderwaterV2.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwaterV2 Factor: " + player_gravity.GravityWaterSwimUnderwaterV2.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwaterV2 DragYUp: " + player_gravity.GravityWaterSwimUnderwaterV2.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityUnderwaterV2 DragYDown:" + player_gravity.GravityWaterSwimUnderwaterV2.DragYDownwards.ToString());}catch{}
 					
-					try{OptionDetailsData.Add("GravityXFCasino Factor: " + player_gravity.GravityXFCasino.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityXFCasino DragYUp: " + player_gravity.GravityXFCasino.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityXFCasino DragYDown:" + player_gravity.GravityXFCasino.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFCasino Factor: " + player_gravity.GravityXFCasino.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFCasino DragYUp: " + player_gravity.GravityXFCasino.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFCasino DragYDown:" + player_gravity.GravityXFCasino.DragYDownwards.ToString());}catch{}
 
-					try{OptionDetailsData.Add("GravityXFShoal Factor: " + player_gravity.GravityXFShoal.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityXFShoal DragYUp: " + player_gravity.GravityXFShoal.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GravityXFShoal DragYDown:" + player_gravity.GravityXFShoal.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFShoal Factor: " + player_gravity.GravityXFShoal.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFShoal DragYUp: " + player_gravity.GravityXFShoal.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GravityXFShoal DragYDown:" + player_gravity.GravityXFShoal.DragYDownwards.ToString());}catch{}
 
-					try{OptionDetailsData.Add("GroundPound Factor: " + player_gravity.GroundPound.Gravity.ToString());}catch{}
-					try{OptionDetailsData.Add("GroundPound DragYUp: " + player_gravity.GroundPound.DragYUpwards.ToString());}catch{}
-					try{OptionDetailsData.Add("GroundPound DragYDown:" + player_gravity.GroundPound.DragYDownwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GroundPound Factor: " + player_gravity.GroundPound.Gravity.ToString());}catch{}
+						try{OptionDetailsData.Add("GroundPound DragYUp: " + player_gravity.GroundPound.DragYUpwards.ToString());}catch{}
+						try{OptionDetailsData.Add("GroundPound DragYDown:" + player_gravity.GroundPound.DragYDownwards.ToString());}catch{}
+					}
+
+					if(OptionDetailsToggles[2]){
+						//Player Data
+						try{OptionDetailsData.Add("-Player Data-");}catch{}
+						try{OptionDetailsData.Add("HP: " + player.MyHealth.CurrentHealth.ToString() + "/" + player.MyHealth.MaxHealth.ToString());}catch{}
+						try{OptionDetailsData.Add("Invulnerable: " + player.MyHealth.Invulnerable.ToString());}catch{}
+						try{OptionDetailsData.Add("Num. Colliding Objects: " + player.GetNumCollidingObjects().ToString());}catch{}
+						try{OptionDetailsData.Add("Combat Timeout Duration: " + player.CombatTimeOutDuration.ToString());}catch{}
+					}
+
+					if(OptionDetailsToggles[3]){
+						//Player Movement
+						try{OptionDetailsData.Add("-Player Movement-");}catch{}
+						try{OptionDetailsData.Add("Velocity Cache: " + player.VelocityCache.GetVelocity().ToString());}catch{}
+						try{OptionDetailsData.Add("Height to Fall: " + player.Jump.HeightAboveGroundBeforeFallConsidered.ToString());}catch{}
+						try{OptionDetailsData.Add("Is Fall Triggered: " + player.Jump.isFallTriggered().ToString());}catch{}
+						try{OptionDetailsData.Add("Is Jump Triggered: " + player.Jump.isJumpTriggered().ToString());}catch{}
+						try{OptionDetailsData.Add("Rampo Jump Mod: " + player.Jump.RampoExtraJumpMod.ToString());}catch{}
+						try{OptionDetailsData.Add("Ground Check Time: " + player.Ground.BlockGroundCheckTimeWhenJumped.ToString());}catch{}
+						try{OptionDetailsData.Add("Platform Position Delta: " + player.Ground.GetPositionDeltaFromPlatform().ToString());}catch{}
+						try{OptionDetailsData.Add("Is Above Platform: " + player.Ground.IsAbovePlatform.ToString());}catch{}
+						try{OptionDetailsData.Add("Ground Position: " + player.Ground.GroundPosition.ToString());}catch{}
+						try{OptionDetailsData.Add("Ground Surface Angle: " + player.Ground.GroundSurfaceAngleRad.ToString());}catch{}
+						try{OptionDetailsData.Add("Height Above Ground: " + player.Ground.HeightAboveGround.ToString());}catch{}
+						try{OptionDetailsData.Add("Is Grounded: " + player.Ground.IsGrounded.ToString());}catch{}
+						try{OptionDetailsData.Add("Raycast Distance: " + player.Ground.RaycastDistance.ToString());}catch{}
+						try{OptionDetailsData.Add("Current XZ Speed %: " + player.Motion.CurrentXZSpeedPercent.ToString());}catch{}
+						try{OptionDetailsData.Add("External XZ Force: " + player.Motion.ExternalForceXZ.ToString());}catch{}
+						try{OptionDetailsData.Add("Current Max Speed: " + player.Motion.GetCurrentMaxSpeed().ToString());}catch{}
+						try{OptionDetailsData.Add("Is Motion Disabled: " + player.Motion.IsMotionDisabled.ToString());}catch{}
+						try{OptionDetailsData.Add("Is XZ Input Disabled: " + player.Motion.IsXZInputDisabled.ToString());}catch{}
+					}
+
+					if(OptionDetailsToggles[4]){
+						//Camera Position
+						try{OptionDetailsData.Add("-Camera Position-");}catch{}
+						try{OptionDetailsData.Add("Position: " + camera.transform.position.ToString());}catch{}
+						try{OptionDetailsData.Add("Position True: " + camera.CameraPosition.ToString());}catch{}
+						try{OptionDetailsData.Add("Angle: " + camera.transform.eulerAngles.ToString());}catch{}
+						try{OptionDetailsData.Add("Angle True: " + camera.CameraRotation.ToString());}catch{}
+						try{OptionDetailsData.Add("Forward: " + camera.transform.forward.ToString());}catch{}
+						try{OptionDetailsData.Add("Max Speed Bad Position: " + camera.MaxPlayerSpeedAllowCameraMoveToBadPosition.ToString());}catch{}
+						try{OptionDetailsData.Add("Flying Height Speed Curve: " + camera.FlyingSpeedToHeightCurve.ToString());}catch{}
+						try{OptionDetailsData.Add("Base Sideway Resolve Speed: " + camera.BaseSidewaysResolveSpeed.ToString());}catch{}
+					}
+
+					if(OptionDetailsToggles[5]){
+						//Camera Details
+						try{OptionDetailsData.Add("-Camera Details-");}catch{}
+						try{OptionDetailsData.Add("FOV: " + camera.CameraFOV.ToString());}catch{}
+						try{OptionDetailsData.Add("Interpolate: " + camera.InterpolateCameraTransform.ToString());}catch{}
+						try{OptionDetailsData.Add("Flying Height Speed Curve: " + camera.BaseFallingHeightOffset.ToString());}catch{}
+						try{OptionDetailsData.Add("Flying Height Speed Curve: " + camera.BaseRestingHeightOffset.ToString());}catch{}
+						try{OptionDetailsData.Add("Stick Min/Max Rotate: " + camera.CameraStickMinRotateScale.ToString() + "/" + camera.CameraStickMaxRotateScale.ToString());}catch{}
+					}
+
+					if(OptionDetailsToggles[6]){
+						//World Data
+
+					}
+
+					if(OptionDetailsToggles[7]){
+						//World Booleans
+
+					}
+
 				}
-
-				if(OptionDetailsToggles[2]){
-					//Player Data
-					try{OptionDetailsData.Add("-Player Data-");}catch{}
-					try{OptionDetailsData.Add("HP: " + player.MyHealth.CurrentHealth.ToString() + "/" + player.MyHealth.MaxHealth.ToString());}catch{}
-					try{OptionDetailsData.Add("Invulnerable: " + player.MyHealth.Invulnerable.ToString());}catch{}
-					try{OptionDetailsData.Add("Num. Colliding Objects: " + player.GetNumCollidingObjects().ToString());}catch{}
-					try{OptionDetailsData.Add("Combat Timeout Duration: " + player.CombatTimeOutDuration.ToString());}catch{}
-				}
-
-				if(OptionDetailsToggles[3]){
-					//Player Movement
-					try{OptionDetailsData.Add("-Player Movement-");}catch{}
-					try{OptionDetailsData.Add("Velocity Cache: " + player.VelocityCache.GetVelocity().ToString());}catch{}
-					try{OptionDetailsData.Add("Height to Fall: " + player.Jump.HeightAboveGroundBeforeFallConsidered.ToString());}catch{}
-					try{OptionDetailsData.Add("Is Fall Triggered: " + player.Jump.isFallTriggered().ToString());}catch{}
-					try{OptionDetailsData.Add("Is Jump Triggered: " + player.Jump.isJumpTriggered().ToString());}catch{}
-					try{OptionDetailsData.Add("Rampo Jump Mod: " + player.Jump.RampoExtraJumpMod.ToString());}catch{}
-					try{OptionDetailsData.Add("Ground Check Time: " + player.Ground.BlockGroundCheckTimeWhenJumped.ToString());}catch{}
-					try{OptionDetailsData.Add("Platform Position Delta: " + player.Ground.GetPositionDeltaFromPlatform().ToString());}catch{}
-					try{OptionDetailsData.Add("Is Above Platform: " + player.Ground.IsAbovePlatform.ToString());}catch{}
-					try{OptionDetailsData.Add("Ground Position: " + player.Ground.GroundPosition.ToString());}catch{}
-					try{OptionDetailsData.Add("Ground Surface Angle: " + player.Ground.GroundSurfaceAngleRad.ToString());}catch{}
-					try{OptionDetailsData.Add("Height Above Ground: " + player.Ground.HeightAboveGround.ToString());}catch{}
-					try{OptionDetailsData.Add("Is Grounded: " + player.Ground.IsGrounded.ToString());}catch{}
-					try{OptionDetailsData.Add("Raycast Distance: " + player.Ground.RaycastDistance.ToString());}catch{}
-					try{OptionDetailsData.Add("Current XZ Speed %: " + player.Motion.CurrentXZSpeedPercent.ToString());}catch{}
-					try{OptionDetailsData.Add("External XZ Force: " + player.Motion.ExternalForceXZ.ToString());}catch{}
-					try{OptionDetailsData.Add("Current Max Speed: " + player.Motion.GetCurrentMaxSpeed().ToString());}catch{}
-					try{OptionDetailsData.Add("Is Motion Disabled: " + player.Motion.IsMotionDisabled.ToString());}catch{}
-					try{OptionDetailsData.Add("Is XZ Input Disabled: " + player.Motion.IsXZInputDisabled.ToString());}catch{}
-				}
-
-				if(OptionDetailsToggles[4]){
-					//Camera Position
-					try{OptionDetailsData.Add("-Camera Position-");}catch{}
-					try{OptionDetailsData.Add("Position: " + camera.transform.position.ToString());}catch{}
-					try{OptionDetailsData.Add("Position True: " + camera.CameraPosition.ToString());}catch{}
-					try{OptionDetailsData.Add("Angle: " + camera.transform.eulerAngles.ToString());}catch{}
-					try{OptionDetailsData.Add("Angle True: " + camera.CameraRotation.ToString());}catch{}
-					try{OptionDetailsData.Add("Forward: " + camera.transform.forward.ToString());}catch{}
-				}
-
-				if(OptionDetailsToggles[5]){
-					//Camera Details
-					try{OptionDetailsData.Add("-Camera Details-");}catch{}
-					try{OptionDetailsData.Add("FOV: " + camera.CameraFOV.ToString());}catch{}
-					try{OptionDetailsData.Add("Interpolate: " + camera.InterpolateCameraTransform.ToString());}catch{}
-				}
-
-				if(OptionDetailsToggles[6]){
-					//World Data
-
-				}
-
-				if(OptionDetailsToggles[7]){
-					//World Booleans
-
-				}
-
-				OptionDetailsData.Add("");
 			}
 
 
@@ -600,8 +621,6 @@ public class xNyuDebug : MonoBehaviour
 
 
 
-
-
 		//Font Settings
 		if(skip_1_frame == 0){
 			int f_size_title = (int)(110f * scr_scale_w);
@@ -640,6 +659,20 @@ public class xNyuDebug : MonoBehaviour
 
 
 
+    public static void OpenConsole()
+    {
+		AllocConsole();
+		Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+		Application.logMessageReceivedThreaded += (condition, stackTrace, type) => Console.WriteLine(condition + " " + stackTrace);
+    }
+
+    public static void ClearConsole()
+    {
+		system("CLS");
+	}
+
+
+
 	public bool HotkeyToFunc(string command){
 		//Set lowe case
 		command = command.ToLower();
@@ -661,7 +694,7 @@ public class xNyuDebug : MonoBehaviour
 
 		//Find Objects
 		PlayerLogic player = FindObjectOfType<PlayerLogic>();
-		GameCamera camera = FindObjectOfType<CameraManager>().CurrentPlayerCamera;
+		FollowCamera camera = (FollowCamera)FindObjectOfType<CameraManager>().GetPlayerCamera(PlayerCameraTypes.Follow);
 
 		if(command.Contains("player.changepositionx")){
 			Vector3 position = new Vector3(player.transform.position.x + float.Parse(hotkey_arguments[0]), player.transform.position.y, player.transform.position.z);
@@ -688,15 +721,6 @@ public class xNyuDebug : MonoBehaviour
 		}else if(command.Contains("player.subcurrenthealth")){
 			player.MyHealth.SubtractHealth(int.Parse(hotkey_arguments[0]), bool.Parse(hotkey_arguments[1]));
 			allowPressMore = false;
-		}else if(command.Contains("camera.setpositionx")){
-			camera.transform.position.Set(float.Parse(hotkey_arguments[0]), camera.transform.position.y, camera.transform.position.z);
-			allowPressMore = false;
-		}else if(command.Contains("camera.setpositiony")){
-			camera.transform.position.Set(camera.transform.position.x, float.Parse(hotkey_arguments[0]), camera.transform.position.z);
-			allowPressMore = false;
-		}else if(command.Contains("camera.setpositionz")){
-			camera.transform.position.Set(camera.transform.position.x, camera.transform.position.y, float.Parse(hotkey_arguments[0]));
-			allowPressMore = false;
 		}else if(command.Contains("camera.changepositionx")){
 			camera.transform.position.Set(camera.transform.position.x + float.Parse(hotkey_arguments[0]), camera.transform.position.y, camera.transform.position.z);
 			allowPressMore = true;
@@ -709,11 +733,67 @@ public class xNyuDebug : MonoBehaviour
 		}else if(command.Contains("camera.setposition")){
 			camera.transform.position += new Vector3(float.Parse(hotkey_arguments[0]), float.Parse(hotkey_arguments[1]), float.Parse(hotkey_arguments[2]));
 			allowPressMore = false;
-		}else if(command.Contains("camera.setposition")){
-			camera.transform.position += new Vector3(float.Parse(hotkey_arguments[0]), float.Parse(hotkey_arguments[1]), float.Parse(hotkey_arguments[2]));
+		}else if(command.Contains("camera.unlock")){
+			CameraUnlock = !CameraUnlock;
+			if(hotkey_arguments.Count > 0) CameraUnlock = bool.Parse(hotkey_arguments[0]);
 			allowPressMore = false;
+		}else if(command.Contains("camera.setextralookdisabled")){
+			ExtraLook = !ExtraLook;
+			if(hotkey_arguments.Count > 0) ExtraLook = bool.Parse(hotkey_arguments[0]);
+			camera.SetExtraLookDisabled(ExtraLook);
+			allowPressMore = false;
+		}else if(command.Contains("camera.setrestingposition")){
+			camera.SetRestingPosition();
+			allowPressMore = false;
+		}else if(command.Contains("camera.fov")){
+			camera.CameraFOV = float.Parse(hotkey_arguments[0]);
+			allowPressMore = true;
 		}else if(command.Contains("camera.playerhaswarped")){
 			CameraManager.Instance.PlayerHasWarped();
+			allowPressMore = true;
+		}else if(command.Contains("tas.execute")){
+			var TASObject = new GameObject();
+			ScriptPath = tas_dir + "\\" + hotkey_arguments[0];
+	        TASObject.AddComponent<xNyuTAS>();
+        	GameObject.DontDestroyOnLoad(TASObject);
+			allowPressMore = false;
+		}else if(command.Contains("tas.openconsole")){
+			OpenConsole();
+			allowPressMore = false;
+		}else if(command.Contains("tas.closeconsole")){
+			FreeConsole();
+			allowPressMore = false;
+		}else if(command.Contains("tas.clearconsole")){
+			ClearConsole();
+			allowPressMore = false;
+		}else if(command.Contains("tas.stopscript")){
+			xNyuTAS gameObject = FindObjectOfType<xNyuTAS>();
+			if(gameObject != null) Destroy(gameObject);
+			PlayerInputStore  InputHandler = FindObjectOfType<PlayerLogic>().InputStore;
+			//Enable Input
+			InputHandler.MoveStick.SetFakedInput(false, Vector3.zero);
+			InputHandler.Jump.SetFakedInput(false, false);
+			InputHandler.Fly.SetFakedInput(false, false);
+			InputHandler.Context.SetFakedInput(false, false);
+			InputHandler.Crouch.SetFakedInput(false, false);
+			InputHandler.Wheel.SetFakedInput(false, false);
+			InputHandler.BasicAttack.SetFakedInput(false, false);
+			InputHandler.SwimUnderwater.SetFakedInput(false, false);
+			InputHandler.SwimUnderwaterAlt.SetFakedInput(false, false);
+			InputHandler.SonarBlastAttack.SetFakedInput(false, false);
+			InputHandler.SonarBoomAttack.SetFakedInput(false, false);
+			InputHandler.SonarShieldAttack.SetFakedInput(false, false);
+			InputHandler.Aiming.SetFakedInput(false, false);
+			InputHandler.ShootEatenItem.SetFakedInput(false, false);
+			InputHandler.TongueEdibleItem.SetFakedInput(false, false);
+			InputHandler.Invisibility.SetFakedInput(false, false);
+			InputHandler.WheelSpin.SetFakedInput(false, false);
+			InputHandler.GroundPound.SetFakedInput(false, false);
+			InputHandler.FartBubble.SetFakedInput(false, false);
+			InputHandler.EmoteHappy.SetFakedInput(false, false);
+			InputHandler.EmoteTaunt.SetFakedInput(false, false);
+			InputHandler.EmoteDisappointed.SetFakedInput(false, false);
+			InputHandler.EmoteAngry.SetFakedInput(false, false);
 			allowPressMore = false;
 		}else if(command.Contains("special.pausegame")){
 			SuspendGame();
@@ -744,10 +824,12 @@ public class xNyuDebug : MonoBehaviour
 
 	}
 
+	public void WriteConsole(object text){
+		try{Console.WriteLine(text);}catch{}
+	}
 
 
 	public void Start(){
-
 		//First Init for Aspect Ratio
 		width = (float)Screen.width;
 		height = (float)Screen.height;
@@ -801,6 +883,10 @@ public class xNyuDebug : MonoBehaviour
 
 
 		//Directory and Settings create
+		if(!Directory.Exists(tas_dir)){
+			Directory.CreateDirectory(tas_dir);
+			File.WriteAllLines(tas_dir + "\\TestScript.ylt", TestScriptSource.Split('#'));
+		}
 		if(!Directory.Exists(settings_dir)) Directory.CreateDirectory(settings_dir);
 		if(!File.Exists(settings_file)){
 			string[] lines = new string[17];
@@ -847,18 +933,15 @@ public class xNyuDebug : MonoBehaviour
 		
 		Funcs_Camera.Add("-Camera Functions-");
 		Funcs_Camera.Add("Camera.Unlock()");
-		Funcs_Camera.Add("Camera.SetPositionX(100)");
-		Funcs_Camera.Add("Camera.SetPositionY(100)");
-		Funcs_Camera.Add("Camera.SetPositionZ(100)");
 		Funcs_Camera.Add("Camera.ChangePositionX(25)");
 		Funcs_Camera.Add("Camera.ChangePositionY(-25)");
 		Funcs_Camera.Add("Camera.ChangePositionZ(100)");
 		Funcs_Camera.Add("Camera.SetPosition(100,200,300)");
-
+		Funcs_Camera.Add("Camera.setExtraLookDisabled()");
+		Funcs_Camera.Add("Camera.setRestingPosition()");
+		Funcs_Camera.Add("Camera.FOV(55)");
+		
 		Funcs_Blank3.Add("-Blank 3-");
-		Funcs_Blank3.Add("None");
-
-		Funcs_Blank4.Add("-Blank 4-");
 		Funcs_Blank3.Add("None");
 
 		Funcs_Blank5.Add("-Blank 5-");
@@ -880,7 +963,6 @@ public class xNyuDebug : MonoBehaviour
 		Key_functions_list.Add(Funcs_Player);
 		Key_functions_list.Add(Funcs_Camera);
 		Key_functions_list.Add(Funcs_Blank3);
-		Key_functions_list.Add(Funcs_Blank4);
 		Key_functions_list.Add(Funcs_Blank5);
 		Key_functions_list.Add(Funcs_Blank6);
 		Key_functions_list.Add(Funcs_Special);
@@ -911,12 +993,29 @@ public class xNyuDebug : MonoBehaviour
 			HudController.instance.Unpause();
 		}
 	}
+	
+	public void LoadTASScripts(){
+		if(Funcs_TAS.Count > 0) Funcs_TAS.Clear();
 
+		Funcs_TAS.Add("-TAS Scripts-");
+		Funcs_TAS.Add("TAS.OpenConsole()");
+		Funcs_TAS.Add("TAS.CloseConsole()");
+		Funcs_TAS.Add("TAS.ClearConsole()");
+		Funcs_TAS.Add("TAS.StopScript()");
+
+		string[] load_scripts = Directory.GetFiles(tas_dir);
+
+		for(int i = 0; i < load_scripts.Length; i++){
+			string[] file_name = load_scripts[i].Split('\\');
+			if(load_scripts[i].Contains(".ylt")) Funcs_TAS.Add("TAS.Execute(" + file_name[file_name.Length-1] + ")");
+		}
+	}
 
 
 	//Directory Settings
 	public string settings_dir = Directory.GetCurrentDirectory() + @"\xNyuDebug";
 	public string settings_file = Directory.GetCurrentDirectory() + @"\xNyuDebug\key_settings.txt";
+	public string tas_dir = Directory.GetCurrentDirectory() + @"\xNyuDebug\TAS";
 
 	//Menus
 	public bool DebugMenuActivated = false;
@@ -934,12 +1033,14 @@ public class xNyuDebug : MonoBehaviour
 	public int OptionHotkeySlot = 0;
 	public bool OptionHotkeyMenuActive = false;
 	public List<List<string>> Key_functions_list = new List<List<string>>();
+	public bool ExtraLook = false;
+	public bool CameraUnlock = false;
 
 	//Hotkey Lists
 	List<string> Funcs_Player = new List<string>();
 	List<string> Funcs_Camera = new List<string>();
 	List<string> Funcs_Blank3 = new List<string>();
-	List<string> Funcs_Blank4 = new List<string>();
+	List<string> Funcs_TAS = new List<string>();
 	List<string> Funcs_Blank5 = new List<string>();
 	List<string> Funcs_Blank6 = new List<string>();
 	List<string> Funcs_Special = new List<string>();
@@ -983,6 +1084,15 @@ public class xNyuDebug : MonoBehaviour
 	public int skip_2_frame = 0;
 
 	public string debugstring = "";
+	public bool debugbool = false;
+
+	//TAS
+	public string ScriptPath = "";
+	public bool ConsoleActivate = false;
+
+	public string TestScriptSource = "frame{jump();Camera(0,0,0)}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump()}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();basicattack()}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{jump();walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{crouch()}#frame{walk(10,10,10)}#frame{walk(10,10,10)}#frame{jump()}#frame{camera(90,158,0)}#frame{jump()}#frame{camera(36,0,0)}";
+
+
 }
 
 
