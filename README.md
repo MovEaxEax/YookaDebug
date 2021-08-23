@@ -25,8 +25,8 @@ It's possible that you want the mod in another version than 1.1.0, so consider t
 - Program scripts:
   With `frame{}` you define what player functions are called with each frame. With `wait{}` you define to wait a specific amaounts of frames. This code has *not* to be
   case-sensitive, type as you want. *IMPORTANT* however is, that each frame/wait has a own line, so press new line for a new command (There is no delimiter yet).
-  It's thinkful that you get sometimes an error, because there is a space to much or what ever. You will see if something is wrong in the debug window.
-  Here is the full list of commands
+  There are no options for comments either. It's thinkful that you get sometimes an error, because there is a space to much or what ever. You will see if something
+  is wrong in the debug window. Here is the full list of commands
   
   Fly()
   Context()
@@ -56,11 +56,15 @@ It's possible that you want the mod in another version than 1.1.0, so consider t
   even by their original name. The Camera command isn't directly like this in game. This one manipulates just the camera angle to what you set.
   
   -Example:
-  frame{Jump();Camera(100,258,0)}   ---> Set camera and press jump in frame 1
-  frame{Jump()}                     ---> Hold jump for 2 more frames pressed
+  //Set camera and press jump in frame 1
+  frame{Jump();Camera(100,258,0)}
+  //Hold jump for 2 more frames pressed
   frame{Jump()}
-  wait{30}                          ---> Wait for exact 30 frames
-  frame{Crouch()}                   ---> Hold Crouch for the last 1 frame
+  frame{Jump()}
+  //Wait for exact 30 frames
+  wait{30}
+  //Hold Crouch for the last 1 frame
+  frame{Crouch()}
   
   Now save this to a .ytl file (edit with notepad++ or what IDE you like) and put the file in the TAS folder. You are ready to execute some TAS magic now!
  
